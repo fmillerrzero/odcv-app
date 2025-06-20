@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ODCV Building Intelligence - R-Zero</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        .header {
+            background: #1a73e8;
+            color: white;
+            padding: 1rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+        
+        .search-section {
+            background: white;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 4px;
+            transition: border-color 0.3s;
+        }
+        
+        .search-input:focus {
+            outline: none;
+            border-color: #1a73e8;
+        }
+        
+        .btn {
+            padding: 0.75rem 2rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .btn-primary {
+            background: #1a73e8;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #1557b0;
+        }
+        
+        .btn-secondary {
+            background: #f8f9fa;
+            color: #5f6368;
+            border: 1px solid #dadce0;
+        }
+        
+        .btn-secondary:hover {
+            background: #e8eaed;
+        }
+        
+        .quick-search {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        
+        .chip {
+            padding: 0.5rem 1rem;
+            background: #e8f0fe;
+            color: #1967d2;
+            border-radius: 16px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .chip:hover {
+            background: #d2e3fc;
+        }
+        
+        .results-section {
+            margin: 2rem auto;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+            transition: transform 0.2s;
+        }
+        
+        .result-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 1rem;
+        }
+        
+        .building-info h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .building-meta {
+            color: #5f6368;
+            font-size: 0.875rem;
+        }
+        
+        .score-badge {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .score-high {
+            background: #1e8e3e;
+            color: white;
+        }
+        
+        .score-medium-high {
+            background: #fb8500;
+            color: white;
+        }
+        
+        .score-medium {
+            background: #fbbc04;
+            color: #333;
+        }
+        
+        .score-low {
+            background: #ea4335;
+            color: white;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        
+        .metric {
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+        
+        .metric-label {
+            font-size: 0.75rem;
+            color: #5f6368;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+        
+        .recommendations {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f0f9ff;
+            border-left: 4px solid #1a73e8;
+            border-radius: 4px;
+        }
+        
+        .recommendations h4 {
+            margin-bottom: 0.5rem;
+            color: #1a73e8;
+        }
+        
+        .recommendations ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .recommendations li {
+            padding: 0.25rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .recommendations li:before {
+            content: "→";
+            position: absolute;
+            left: 0;
+            color: #1a73e8;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 3rem;
+            color: #5f6368;
+        }
+        
+        .error {
+            background: #fce8e6;
+            color: #d33b27;
+            padding: 1rem;
+            border-radius: 4px;
+            margin: 1rem 0;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+        
+        .stat-label {
+            color: #5f6368;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .container {
+                padding: 0 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <h1>🏢 ODCV Building Intelligence</h1>
+        </div>
+    </header>
+    
+    <main class="container">
+        <section class="search-section">
+            <h2>Find ODCV Opportunities</h2>
+            <form class="search-form" id="searchForm">
+                <input 
+                    type="text" 
+                    class="search-input" 
+                    id="addressInput"
+                    placeholder="Enter building address (e.g., 1155 Avenue of the Americas)"
+                    required
+                >
+                <button type="submit" class="btn btn-primary">Analyze Building</button>
+            </form>
+            
+            <div class="quick-search">
+                <span style="margin-right: 1rem; color: #5f6368;">Quick examples:</span>
+                <span class="chip" onclick="quickSearch('1155 Avenue of the Americas')">1155 Ave of Americas</span>
+                <span class="chip" onclick="quickSearch('80 Maiden Lane')">80 Maiden Lane</span>
+                <span class="chip" onclick="quickSearch('77 Water Street')">77 Water Street</span>
+            </div>
+        </section>
+        
+        <section id="stats" class="stats-grid" style="display: none;">
+            <!-- Stats will be loaded here -->
+        </section>
+        
+        <section class="results-section" id="results">
+            <!-- Results will be displayed here -->
+        </section>
+        
+        <section style="margin: 2rem 0; text-align: center;">
+            <button class="btn btn-secondary" onclick="loadTopOpportunities()">
+                Show Top 10 Opportunities
+            </button>
+        </section>
+    </main>
+    
+    <script>
+        const API_BASE = '/api';
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+        });
+        
+        // Form submission
+        document.getElementById('searchForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const address = document.getElementById('addressInput').value;
+            await analyzeBuilding(address);
+        });
+        
+        // Quick search
+        function quickSearch(address) {
+            document.getElementById('addressInput').value = address;
+            analyzeBuilding(address);
+        }
+        
+        // Analyze building
+        async function analyzeBuilding(address) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">Analyzing building...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/score`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ address })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                displayResult([data]);
+                
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">
+                    Failed to analyze building: ${error.message}
+                </div>`;
+            }
+        }
+        
+        // Load top opportunities
+        async function loadTopOpportunities() {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '<div class="loading">Loading top opportunities...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/opportunities?limit=10`);
+                const data = await response.json();
+                displayResult(data);
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">
+                    Failed to load opportunities: ${error.message}
+                </div>`;
+            }
+        }
+        
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const stats = await response.json();
+                
+                const statsHtml = `
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.total_buildings.toLocaleString()}</div>
+                        <div class="stat-label">Buildings Analyzed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.vav_buildings.toLocaleString()}</div>
+                        <div class="stat-label">VAV Buildings</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.low_occupancy_buildings.toLocaleString()}</div>
+                        <div class="stat-label">Low Occupancy</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${stats.poor_grade_buildings.toLocaleString()}</div>
+                        <div class="stat-label">Poor Energy Grade</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value">${Math.round(stats.average_occupancy)}%</div>
+                        <div class="stat-label">Avg Occupancy</div>
+                    </div>
+                `;
+                
+                document.getElementById('stats').innerHTML = statsHtml;
+                document.getElementById('stats').style.display = 'grid';
+                
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+        
+        // Display results
+        function displayResult(buildings) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (!buildings || buildings.length === 0) {
+                resultsDiv.innerHTML = '<div class="error">No results found</div>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = buildings.map(building => {
+                const scoreClass = getScoreClass(building.opportunity_level);
+                
+                return `
+                    <div class="result-card">
+                        <div class="result-header">
+                            <div class="building-info">
+                                <h3>${building.address}</h3>
+                                <div class="building-meta">
+                                    BBL: ${building.bbl} | 
+                                    Score: ${Math.round(building.total_score)}/100
+                                </div>
+                            </div>
+                            <div class="score-badge ${scoreClass}">
+                                ${building.opportunity_level}
+                            </div>
+                        </div>
+                        
+                        <div class="metrics-grid">
+                            <div class="metric">
+                                <div class="metric-label">Annual Savings</div>
+                                <div class="metric-value">$${building.annual_savings_dollars.toLocaleString()}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">HVAC Savings</div>
+                                <div class="metric-value">${building.savings_potential_percent}%</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Deployment</div>
+                                <div class="metric-value">${building.deployment_complexity}</div>
+                            </div>
+                            <div class="metric">
+                                <div class="metric-label">Payback</div>
+                                <div class="metric-value">${building.financial_analysis.simple_payback_years} years</div>
+                            </div>
+                        </div>
+                        
+                        ${building.implementation_plan ? `
+                            <div class="metrics-grid">
+                                <div class="metric">
+                                    <div class="metric-label">Sensors Needed</div>
+                                    <div class="metric-value">${building.implementation_plan.sensor_count}</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Integration</div>
+                                    <div class="metric-value">${building.implementation_plan.integration_type}</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-label">Timeline</div>
+                                    <div class="metric-value">${building.implementation_plan.deployment_weeks} weeks</div>
+                                </div>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="recommendations">
+                            <h4>Recommendations:</h4>
+                            <ul>
+                                ${building.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function getScoreClass(level) {
+            switch(level) {
+                case 'HIGH': return 'score-high';
+                case 'MEDIUM-HIGH': return 'score-medium-high';
+                case 'MEDIUM': return 'score-medium';
+                default: return 'score-low';
+            }
+        }
+    </script>
+</body>
+</html>

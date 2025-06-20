@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: odcv-api
+    runtime: docker
+    repo: https://github.com/YOUR_USERNAME/odcv-app
+    region: oregon
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: GEOCLIENT_APP_ID
+        sync: false
+      - key: GEOCLIENT_APP_KEY
+        sync: false
+      - key: LOG_LEVEL
+        value: INFO
+    buildCommand: echo "No build command needed"
+    startCommand: gunicorn main:app -w 4 -k uvicorn.workers.UvicornWorker -b 0.0.0.0:8000
